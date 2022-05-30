@@ -28,7 +28,7 @@ def load_texture(filepath: str) -> GLuint | np.uint32:
 MAX_QUAD_COUNT = 100
 MAX_VERTEX_COUNT = MAX_QUAD_COUNT * 4
 MAX_INDEX_COUNT = MAX_QUAD_COUNT * 6
-MAX_TEXTURES = 32
+MAX_TEXTURES = 16
 
 VERTEX_STRIDE = 10
 
@@ -45,13 +45,11 @@ class RenderData:
 
     # glm.array[glm.uint32]
     texture_slots: glm.array
-    texture_slot_index = 0
+    texture_slot_index = 1
     
 _s_data = RenderData()
 
 def init():
-    t1 = time.perf_counter()
-    
     # generate vertices
     _s_data.vertices = glm.array.zeros(MAX_VERTEX_COUNT * VERTEX_STRIDE, glm.float32)
     
@@ -108,22 +106,29 @@ def init():
     _s_data.texture_slots = glm.array.zeros(MAX_TEXTURES, glm.uint32)
     _s_data.texture_slots[0] = _s_data.white_texture
 
-    t2 = time.perf_counter()
-    print(t2 - t1)
-
 def begin_batch():
     pass    
 
 def end_batch():
-    pass
+    glBindBuffer(GL_ARRAY_BUFFER, _s_data.vbo)
+    glBufferSubData(GL_ARRAY_BUFFER, 0, _s_data.vertex_count * VERTEX_STRIDE * 4, _s_data.vertices.ptr)
 
 def flush():
-    pass
+    for i in range(_s_data.texture_slot_index):
+        glActiveTexture(GL_TEXTURE0 + i)
+        glBindTexture(GL_TEXTURE_2D, _s_data.texture_slots[i])
 
-def set_data_from_quad(curr_index, position, color, tex_coords, tex_index):
-    _s_data.vertices[curr_index] = position[0]
+    glBindVertexArray(_s_data.vao)
+    index_count = _s_data.vertex_count // 4 * 6
+    glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, None)
+
+    _s_data.vertex_count = 0
+    _s_data.texture_slot_index = 1
+
+def set_vertex_data_from_quad(curr_index, position, color, tex_coords, tex_index):
+    _s_data.vertices[curr_index + 0] = position[0]
     _s_data.vertices[curr_index + 1] = position[1]
-    _s_data.vertices[curr_index + 2] = 0.0
+    _s_data.vertices[curr_index + 2] = position[2]
     _s_data.vertices[curr_index + 3] = color[0]
     _s_data.vertices[curr_index + 4] = color[1]
     _s_data.vertices[curr_index + 5] = color[2]
@@ -132,7 +137,12 @@ def set_data_from_quad(curr_index, position, color, tex_coords, tex_index):
     _s_data.vertices[curr_index + 8] = tex_coords[1]
     _s_data.vertices[curr_index + 9] = tex_index 
 
-def draw_quad(position, size, color):
+    # _s_data.vertices[curr_index + 0: curr_index + 3] = glm.array(glm.float32, *position)
+    # _s_data.vertices[curr_index + 3: curr_index + 7] = glm.array(glm.float32, *color)
+    # _s_data.vertices[curr_index + 7: curr_index + 9] = glm.array(glm.float32, *tex_coords)
+    # _s_data.vertices[curr_index + 9] = tex_index
+
+def draw_colored_quad(position, size, color):
     if (_s_data.vertex_count >= MAX_VERTEX_COUNT):
         end_batch()
         flush()
@@ -141,57 +151,64 @@ def draw_quad(position, size, color):
     texture_index = 0.0
     
     curr_index = _s_data.vertex_count * VERTEX_STRIDE
-    _s_data.vertices[curr_index] = position[0]
-    _s_data.vertices[curr_index + 1] = position[1]
-    _s_data.vertices[curr_index + 2] = 0.0
-    _s_data.vertices[curr_index + 3] = color[0]
-    _s_data.vertices[curr_index + 4] = color[1]
-    _s_data.vertices[curr_index + 5] = color[2]
-    _s_data.vertices[curr_index + 6] = color[3]
-    _s_data.vertices[curr_index + 7] = 0.0
-    _s_data.vertices[curr_index + 8] = 0.0
-    _s_data.vertices[curr_index + 9] = texture_index
-    # set_data_from_quad(curr_index, position, color, (0.0, 0.0), texture_index)
+    temp_pos = (position[0], position[1], 0.0)
+    set_vertex_data_from_quad(curr_index, temp_pos, color, (0.0, 0.0), texture_index)
     _s_data.vertex_count += 1
 
     curr_index = _s_data.vertex_count * VERTEX_STRIDE
-    _s_data.vertices[curr_index] = position[0] + size[0]
-    _s_data.vertices[curr_index + 1] = position[1]
-    _s_data.vertices[curr_index + 2] = 0.0
-    _s_data.vertices[curr_index + 3] = color[0]
-    _s_data.vertices[curr_index + 4] = color[1]
-    _s_data.vertices[curr_index + 5] = color[2]
-    _s_data.vertices[curr_index + 6] = color[3]
-    _s_data.vertices[curr_index + 7] = 1.0
-    _s_data.vertices[curr_index + 8] = 0.0
-    _s_data.vertices[curr_index + 9] = texture_index
+    temp_pos = (position[0] + size[0], position[1], 0.0)
+    set_vertex_data_from_quad(curr_index, temp_pos, color, (1.0, 0.0), texture_index)
     _s_data.vertex_count += 1
 
     curr_index = _s_data.vertex_count * VERTEX_STRIDE
-    _s_data.vertices[curr_index] = position[0] + size[0]
-    _s_data.vertices[curr_index + 1] = position[1] + size[1]
-    _s_data.vertices[curr_index + 2] = 0.0
-    _s_data.vertices[curr_index + 3] = color[0]
-    _s_data.vertices[curr_index + 4] = color[1]
-    _s_data.vertices[curr_index + 5] = color[2]
-    _s_data.vertices[curr_index + 6] = color[3]
-    _s_data.vertices[curr_index + 7] = 1.0
-    _s_data.vertices[curr_index + 8] = 1.0
-    _s_data.vertices[curr_index + 9] = texture_index
+    temp_pos = (position[0] + size[0], position[1] + size[1], 0.0)
+    set_vertex_data_from_quad(curr_index, temp_pos, color, (1.0, 1.0), texture_index)
     _s_data.vertex_count += 1
 
     curr_index = _s_data.vertex_count * VERTEX_STRIDE
-    _s_data.vertices[curr_index] = position[0]
-    _s_data.vertices[curr_index + 1] = position[1] + size[1]
-    _s_data.vertices[curr_index + 2] = 0.0
-    _s_data.vertices[curr_index + 3] = color[0]
-    _s_data.vertices[curr_index + 4] = color[1]
-    _s_data.vertices[curr_index + 5] = color[2]
-    _s_data.vertices[curr_index + 6] = color[3]
-    _s_data.vertices[curr_index + 7] = 0.0
-    _s_data.vertices[curr_index + 8] = 1.0
-    _s_data.vertices[curr_index + 9] = texture_index
+    temp_pos = (position[0], position[1] + size[1], 0.0)
+    set_vertex_data_from_quad(curr_index, temp_pos, color, (0.0, 1.0), texture_index)
     _s_data.vertex_count += 1
+
+def draw_textured_quad(position, size, texture_id):
+    if (_s_data.vertex_count >= MAX_VERTEX_COUNT or _s_data.texture_slot_index >= MAX_TEXTURES):
+        end_batch()
+        flush()
+        begin_batch() 
+
+    color = (1.0, 1.0, 1.0, 1.0)
+
+    texture_index = 0.0
+    for i in range(1, _s_data.texture_slot_index):
+        if (_s_data.texture_slots[i] == texture_id):
+            texture_index = float(i)
+            break
+
+    if (texture_index == 0.0):
+        texture_index = float(_s_data.texture_slot_index)
+        _s_data.texture_slots[_s_data.texture_slot_index] = texture_id
+        _s_data.texture_slot_index += 1
+    
+    curr_index = _s_data.vertex_count * VERTEX_STRIDE
+    temp_pos = (position[0], position[1], 0.0)
+    set_vertex_data_from_quad(curr_index, temp_pos, color, (0.0, 0.0), texture_index)
+    _s_data.vertex_count += 1
+
+    curr_index = _s_data.vertex_count * VERTEX_STRIDE
+    temp_pos = (position[0] + size[0], position[1], 0.0)
+    set_vertex_data_from_quad(curr_index, temp_pos, color, (1.0, 0.0), texture_index)
+    _s_data.vertex_count += 1
+
+    curr_index = _s_data.vertex_count * VERTEX_STRIDE
+    temp_pos = (position[0] + size[0], position[1] + size[1], 0.0)
+    set_vertex_data_from_quad(curr_index, temp_pos, color, (1.0, 1.0), texture_index)
+    _s_data.vertex_count += 1
+
+    curr_index = _s_data.vertex_count * VERTEX_STRIDE
+    temp_pos = (position[0], position[1] + size[1], 0.0)
+    set_vertex_data_from_quad(curr_index, temp_pos, color, (0.0, 1.0), texture_index)
+    _s_data.vertex_count += 1
+
 
 def draw_circle(color, center, radius, width=0):
     pass

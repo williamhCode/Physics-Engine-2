@@ -18,6 +18,8 @@ from physics.body import *
 from physics.arbiter import Arbiter
 from physics.world import World
 import engine
+from engine.shader import Shader
+
 
 class MainWindow(pyglet.window.Window):
     
@@ -26,6 +28,9 @@ class MainWindow(pyglet.window.Window):
         super().__init__(width=1280, height=720, vsync=False, resizable=True, config=config)
 
         engine.render.init()
+
+        self.shader = Shader('engine/shaders/quad.vert', 'engine/shaders/quad.frag')
+        self.shader.use()
         test_tex_id = engine.render.load_texture('test.png')
 
         self.timer = Timer() 
@@ -35,10 +40,22 @@ class MainWindow(pyglet.window.Window):
         super().on_key_press(symbol, modifiers)
        
     def on_resize(self, width, height):
-        pass
+        pixel_width, pixel_height = self.get_framebuffer_size()
+        glViewport(0, 0, pixel_width, pixel_height)
+        
+        view_matrix = glm.ortho(0, width, 0, height, -1, 1)
+        self.shader.use()
+        self.shader.set_mat4('u_ViewProj', view_matrix)
         
     def on_draw(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+        engine.render.begin_batch()
+        
+        engine.render.draw_colored_quad((100, 100), (50, 50), (255, 0, 0, 255))
+
+        engine.render.end_batch()
+        engine.render.flush()
 
         self.flip()
                 
