@@ -65,9 +65,9 @@ class MainWindow(pyglet.window.Window):
             # self.renderer.add_circle(b.shape.radius)
             for i in range(10):
                 for j in range(10):
-                    b = Body(Circle(10), position=(x+i*30, y+j*30), velocity=velocity, mass=100)
+                    b = Body(Box((10, 10)), position=(x+i*30, y+j*30), velocity=velocity, mass=100)
                     self.world.bodies.append(b)
-                    self.renderer.add_circle(b.shape.radius)
+                    self.renderer.add_polygon(b.shape.vertices)
         
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_x = x
@@ -93,6 +93,7 @@ class MainWindow(pyglet.window.Window):
         self.renderer.resize(width, height)
         
     def on_draw(self):
+        glClear(GL_COLOR_BUFFER_BIT)
         
         self.renderer.draw_shapes(self.world.bodies)
         self.renderer.draw_points(self.world.arbiters)

@@ -1,13 +1,11 @@
-import numpy as np
-import ctypes
 import glm
+import time
 
-print(np.uint32 == ctypes.c_uint32)
-print(glm.c_uint32 == ctypes.c_uint32)
-print(glm.uint32)
-
-from OpenGL.GL import *
-
-a = glGenVertexArrays(1)
-b = glGenBuffers(1)
-print(a, b)
+t1 = time.perf_counter()
+arr = glm.array.zeros(10, glm.float32)
+arr[:2] = glm.array(glm.float32, 1, 2)
+# arr[0] = 1
+# arr[1] = 2
+t2 = time.perf_counter()
+print(repr(arr))
+print(t2 - t1)

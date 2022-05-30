@@ -22,7 +22,7 @@ class Polygon:
 
 class Box(Polygon):
     
-    def __init__(self, dim) -> None:
+    def __init__(self, dim: tuple[float, float]) -> None:
         width_h = dim[0] / 2
         height_h = dim[1] / 2
         vertices = [(width_h, height_h), (-width_h, height_h), (-width_h, -height_h), (width_h, -height_h)]
