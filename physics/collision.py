@@ -1,5 +1,4 @@
 from __future__ import annotations
-from os import sep
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .arbiter import Arbiter
@@ -9,6 +8,7 @@ import glm
 from .body import Body
 from . import arbiter
 from . import math_utils
+
 
 # return min and max verts projected on axis
 def proj_verts_on_axis(vertices: list[glm.vec2], axis: glm.vec2):

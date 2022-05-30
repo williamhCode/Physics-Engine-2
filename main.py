@@ -4,7 +4,6 @@ import pyglet
 from render.render import Renderer
 pyglet.options['shadow_window'] = False
 
-from OpenGL.GL import *
 from pyglet.window import mouse
 from pyglet.window import key
 from timer import Timer
@@ -18,23 +17,23 @@ import glm
 from physics.body import *
 from physics.arbiter import Arbiter
 from physics.world import World
-
+import engine
 
 class MainWindow(pyglet.window.Window):
     
     def __init__(self):
-        config = pyglet.gl.Config(major_version=4, minor_version=1, forward_compatible=True, double_buffer=True)
+        config = pyglet.gl.Config(major_version=4, minor_version=5, forward_compatible=True, double_buffer=True)
         super().__init__(width=1280, height=720, vsync=False, resizable=True, config=config)
-    
-        self.init_objects()
 
+        engine.render.init()
+
+        self.timer = Timer() 
+        self.renderer = Renderer()
+
+        self.init_objects()
         self.event_loop()
 
     def init_objects(self):
-        self.timer = Timer() 
-
-        self.renderer = Renderer()
-        
         self.world = World(glm.vec2(0, -500), 10)
         
         b = Body(Box((1280, 100)), position=(640, 50), mass=float('inf'))
@@ -94,7 +93,6 @@ class MainWindow(pyglet.window.Window):
         self.renderer.resize(width, height)
         
     def on_draw(self):
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         
         self.renderer.draw_shapes(self.world.bodies)
         self.renderer.draw_points(self.world.arbiters)

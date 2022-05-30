@@ -6,10 +6,13 @@ from physics.arbiter import Arbiter
 
 from .shader import Shader
 from .shapes import *
-import os
 import glm
-
 import time
+
+from .utiliies import set_cwd
+from pathlib import Path
+
+
 class Renderer:
     
     def __init__(self):
@@ -20,15 +23,10 @@ class Renderer:
         glPointSize(5)
         glEnable(GL_LINE_SMOOTH)
         
-        savedPath = os.getcwd()
-        curr_path = os.path.dirname(os.path.abspath(__file__))
-        os.chdir(curr_path)        
-        
-        self.circle_shader = Shader('shaders/circle.vert', 'shaders/circle.frag')
-        self.point_shader = Shader('shaders/point.vert', 'shaders/point.frag')
-        self.polygon_shader = Shader('shaders/polygon.vert', 'shaders/polygon.frag')
-        
-        os.chdir(savedPath)
+        with set_cwd(Path(__file__).parent.resolve()):
+            self.circle_shader = Shader('shaders/circle.vert', 'shaders/circle.frag')
+            self.point_shader = Shader('shaders/point.vert', 'shaders/point.frag')
+            self.polygon_shader = Shader('shaders/polygon.vert', 'shaders/polygon.frag')
         
         self.shaders = [self.circle_shader, self.point_shader, self.polygon_shader]
 

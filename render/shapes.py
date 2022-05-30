@@ -41,6 +41,7 @@ class Polygon:
     def __init__(self, shader: Shader, vertices: glm.array):
         self.shader = shader
         
+        # t1 = time.perf_counter()
         self.vertex_count = len(vertices)
         vertices = vertices.reinterpret_cast(glm.float32)
         
@@ -53,12 +54,15 @@ class Polygon:
         
         glEnableVertexAttribArray(0)
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8, ctypes.c_void_p(0))
+        # t2 = time.perf_counter()
         
     def draw(self, vertices: glm.array):
+        # t1 = time.perf_counter()
         vertices = vertices.reinterpret_cast(glm.float32)
         
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices.ptr, GL_STREAM_DRAW)
+        # t2 = time.perf_counter()
         
         self.shader.use()
         glBindVertexArray(self.vao)
